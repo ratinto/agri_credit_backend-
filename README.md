@@ -1,6 +1,15 @@
 # 🌾 Agri Credit Platform - Backend API
 
-A comprehensive backend system for agricultural credit management with mock Aadhaar authentication, farm management, crop tracking, and AI-based trust scoring.
+A comprehensive backend system for agricultural credit management with AI-based trust scoring, crop health monitoring, weather risk assessment, and smart loan matching.
+
+## ✨ Features
+
+- 🔐 **Authentication**: Farmer registration and login with JWT tokens
+- 🚜 **Farm Management**: GPS-based farm registration and crop tracking
+- 📊 **Data Validation**: NDVI crop health, weather data, market prices
+- 🎯 **AI Trust Score**: 0-100 score based on farm data, crop health, history, and behavior
+- 💰 **Smart Loans**: Personalized loan offers from 5+ lender types
+- 📱 **Complete API**: 15 RESTful endpoints covering the entire credit lifecycle
 
 ## 🚀 Quick Start
 
@@ -26,7 +35,7 @@ npm install
 
 Create a `.env` file in the root directory:
 ```env
-PORT=5000
+PORT=3000
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your_supabase_anon_key_here
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here
@@ -40,14 +49,22 @@ JWT_SECRET=agri-credit-secret-key-2026
 - Go to [Supabase Dashboard](https://supabase.com/dashboard)
 - Create a new project or use existing one
 - Go to SQL Editor
-- Copy and execute the SQL from `supabase_setup.sql`
+- Copy and execute the entire SQL from `supabase_setup.sql`
+- This creates 5 tables: farmers, farms, crops, loans, loan_repayments
 
 5. **Start the server**
 
-Development mode:
+Development mode (with auto-reload):
 ```bash
 npm run dev
 ```
+
+Production mode:
+```bash
+npm start
+```
+
+Server will start on: http://localhost:3000
 
 Production mode:
 ```bash

@@ -134,6 +134,15 @@ Before testing, ensure:
 ### 🌾 2.2 Add Crop (NEXT)
 - Endpoint: `POST /api/v1/crop/add`
 
+**STATUS:** ✅ **COMPLETE!**
+
+### 🛰 3.1 Fetch NDVI
+- Endpoint: `GET /api/v1/validation/ndvi/{farm_id}`
+
+**STATUS:** ✅ **COMPLETE!**
+
+### 🌧 3.2 Fetch Weather Data (NEXT)
+
 And more...
 
 ---
@@ -143,5 +152,5 @@ And more...
 For testing instructions, see: `API_TESTS.md`  
 For problem statement reference, see: `prStatement.txt`
 
-**Current Implementation:** 3/15 APIs Complete (20%)
-**Status:** Add Farm API ✅ DONE
+**Current Implementation:** 5/15 APIs Complete (33.3%)
+**Status:** Fetch NDVI API ✅ DONE

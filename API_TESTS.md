@@ -596,4 +596,309 @@ curl -X POST http://localhost:5000/api/v1/farm/add \
 - ✅ Irrigation and soil type tracking
 - ✅ Timestamps for audit trail
 
+---
+
+# Crop Management API Tests
+
+## 4. Add Crop API
+
+### Endpoint
+```
+POST http://localhost:5000/api/v1/crop/add
+Content-Type: application/json
+```
+
+### Test Case 1: Successful Crop Addition
+```json
+{
+  "farm_id": "FARM1000",
+  "crop_type": "Wheat",
+  "season": "Rabi",
+  "sowing_date": "2026-11-15",
+  "expected_harvest_date": "2027-04-15",
+  "area_acres": 5.5,
+  "expected_yield_qtl": 110.0
+}
+```
+
+**Expected Response (201):**
+```json
+{
+  "message": "Crop added successfully",
+  "crop_id": "CROP1004",
+  "farm_id": "FARM1000",
+  "crop_type": "Wheat",
+  "season": "Rabi",
+  "sowing_date": "2026-11-15",
+  "location": {
+    "state": "Haryana",
+    "district": "Sonipat"
+  }
+}
+```
+
+### Test Case 2: Missing Required Fields
+```json
+{
+  "farm_id": "FARM1000",
+  "crop_type": "Wheat"
+}
+```
+
+**Expected Response (400):**
+```json
+{
+  "error": "Missing required fields",
+  "message": "farm_id, crop_type, season, and sowing_date are required"
+}
+```
+
+### Test Case 3: Invalid Season
+```json
+{
+  "farm_id": "FARM1000",
+  "crop_type": "Wheat",
+  "season": "InvalidSeason",
+  "sowing_date": "2026-11-15"
+}
+```
+
+**Expected Response (400):**
+```json
+{
+  "error": "Invalid season",
+  "message": "Season must be one of: Kharif, Rabi, Zaid, Summer, Winter"
+}
+```
+
+### Test Case 4: Harvest Date Before Sowing Date
+```json
+{
+  "farm_id": "FARM1000",
+  "crop_type": "Wheat",
+  "season": "Rabi",
+  "sowing_date": "2026-11-15",
+  "expected_harvest_date": "2026-10-15"
+}
+```
+
+**Expected Response (400):**
+```json
+{
+  "error": "Invalid harvest date",
+  "message": "expected_harvest_date must be after sowing_date"
+}
+```
+
+### Test Case 5: Area Exceeds Farm Size
+```json
+{
+  "farm_id": "FARM1000",
+  "crop_type": "Wheat",
+  "season": "Rabi",
+  "sowing_date": "2026-11-15",
+  "area_acres": 100
+}
+```
+
+**Expected Response (400):**
+```json
+{
+  "error": "Area exceeds farm size",
+  "message": "Crop area (100 acres) cannot exceed farm size (5.5 acres)"
+}
+```
+
+---
+
+## CURL Commands for Crop Management Testing
+
+### Add Crop (Full Details):
+```bash
+curl -X POST http://localhost:5000/api/v1/crop/add \
+  -H "Content-Type: application/json" \
+  -d '{
+    "farm_id": "FARM1000",
+    "crop_type": "Wheat",
+    "season": "Rabi",
+    "sowing_date": "2026-11-15",
+    "expected_harvest_date": "2027-04-15",
+    "area_acres": 5.5,
+    "expected_yield_qtl": 110.0
+  }'
+```
+
+### Add Crop (Minimal Details):
+```bash
+curl -X POST http://localhost:5000/api/v1/crop/add \
+  -H "Content-Type: application/json" \
+  -d '{
+    "farm_id": "FARM1000",
+    "crop_type": "Rice",
+    "season": "Kharif",
+    "sowing_date": "2026-07-10"
+  }'
+```
+
+### Get All Crops for a Farm:
+```bash
+curl -X GET http://localhost:5000/api/v1/crop/FARM1000
+```
+
+### Get Specific Crop Details:
+```bash
+curl -X GET http://localhost:5000/api/v1/crop/details/CROP1004
+```
+
+### Update Crop Status (Mark as Harvested):
+```bash
+curl -X PUT http://localhost:5000/api/v1/crop/update/CROP1004 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "crop_status": "harvested",
+    "actual_harvest_date": "2027-04-20",
+    "actual_yield_qtl": 115.5
+  }'
+```
+
+---
+
+# Data Validation API Tests
+
+## 5. Fetch NDVI API
+
+### Endpoint
+```
+GET http://localhost:5000/api/v1/validation/ndvi/:farm_id
+```
+
+### Test Case 1: Successful NDVI Fetch (Farm with GPS)
+```
+GET /api/v1/validation/ndvi/FARM1000
+```
+
+**Expected Response (200):**
+```json
+{
+  "farm_id": "FARM1000",
+  "farmer_name": "Rajesh Kumar",
+  "ndvi_score": 0.745,
+  "health_status": "Excellent",
+  "confidence_level": "High",
+  "measurement_date": "2026-02-19",
+  "location": {
+    "latitude": 29.0588,
+    "longitude": 76.0856,
+    "state": "Uttar Pradesh",
+    "district": "Rampur"
+  },
+  "crop_info": {
+    "crop_type": "Wheat",
+    "season": "Rabi",
+    "sowing_date": "2025-11-15"
+  },
+  "recommendations": [
+    "Crop health is excellent",
+    "Continue current farming practices",
+    "Monitor for any sudden changes"
+  ],
+  "data_source": "Mock Satellite Imagery",
+  "integration_note": "Using mock data. In production, this integrates with Sentinel Hub / Google Earth Engine"
+}
+```
+
+### Test Case 2: Farm Without GPS Coordinates
+```
+GET /api/v1/validation/ndvi/FARM9999
+```
+
+**Expected Response (400):**
+```json
+{
+  "error": "GPS coordinates not available",
+  "message": "This farm does not have GPS coordinates. NDVI calculation requires location data.",
+  "suggestion": "Update farm details with GPS coordinates"
+}
+```
+
+### Test Case 3: Non-existent Farm
+```
+GET /api/v1/validation/ndvi/FARM_INVALID
+```
+
+**Expected Response (404):**
+```json
+{
+  "error": "Farm not found",
+  "message": "No farm found with ID: FARM_INVALID"
+}
+```
+
+---
+
+## CURL Commands for NDVI Testing
+
+### Fetch NDVI for a Farm:
+```bash
+curl -X GET http://localhost:5000/api/v1/validation/ndvi/FARM1000
+```
+
+### Complete Workflow (Farm → Crop → NDVI):
+```bash
+# Step 1: Add Farm with GPS
+curl -X POST http://localhost:5000/api/v1/farm/add \
+  -H "Content-Type: application/json" \
+  -d '{
+    "farmer_id": "FRM1000",
+    "land_size_acres": 3.0,
+    "gps_lat": 29.0588,
+    "gps_long": 76.0856,
+    "state": "Haryana",
+    "district": "Sonipat",
+    "irrigation_type": "Canal"
+  }'
+
+# Step 2: Add Crop to Farm
+curl -X POST http://localhost:5000/api/v1/crop/add \
+  -H "Content-Type: application/json" \
+  -d '{
+    "farm_id": "FARM1003",
+    "crop_type": "Wheat",
+    "season": "Rabi",
+    "sowing_date": "2025-11-15",
+    "area_acres": 3.0
+  }'
+
+# Step 3: Fetch NDVI
+curl -X GET http://localhost:5000/api/v1/validation/ndvi/FARM1003
+```
+
+---
+
+## NDVI Implementation Details
+
+### NDVI Score Interpretation
+- **0.7 to 1.0**: Excellent - Dense, healthy vegetation
+- **0.5 to 0.7**: Healthy - Moderate vegetation
+- **0.3 to 0.5**: Moderate - Sparse vegetation
+- **0.2 to 0.3**: Poor - Very sparse vegetation
+- **Below 0.2**: Critical - Barren land or water
+
+### Mock Calculation Factors
+- ✅ GPS location (climate zone)
+- ✅ Season (Kharif/Rabi/Zaid)
+- ✅ Crop type
+- ✅ Random variation for realism
+
+### Production Integration Points
+- **Sentinel Hub**: Real-time satellite imagery
+- **Google Earth Engine**: Historical NDVI data
+- **NASA MODIS**: Global vegetation monitoring
+
+### Confidence Levels
+- **High**: GPS + Crop data available
+- **Medium**: GPS or Crop data available
+- **Low**: Minimal data available
+
+
 
