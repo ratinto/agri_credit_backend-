@@ -1,0 +1,218 @@
+🏦 BANK MODULE API DOCUMENTATION
+
+Version: v1.1
+Auth Method: BankID + Password
+
+1️⃣ BANK AUTHENTICATION SYSTEM
+🔐 1.1 Register Bank
+Endpoint
+POST /api/v1/bank/register
+
+Description
+
+Registers a new lending institution.
+System generates a unique bank_id.
+
+Request
+{
+  "bank_name": "GreenAgro Finance Ltd",
+  "contact_person": "Amit Sharma",
+  "email": "amit@greenagro.com",
+  "password": "securePassword123",
+  "license_number": "NBFC123456"
+}
+
+Internal Logic
+
+Validate unique email
+
+Hash password (bcrypt)
+
+Generate bank_id (e.g., BNK1001)
+
+Store bank record
+
+Assign role = "BANK"
+
+Response
+{
+  "message": "Bank registered successfully",
+  "bank_id": "BNK1001"
+}
+
+🔐 1.2 Bank Login
+Endpoint
+POST /api/v1/bank/login
+
+Request
+{
+  "bank_id": "BNK1001",
+  "password": "securePassword123"
+}
+
+Response
+{
+  "token": "jwt_token_here",
+  "role": "BANK",
+  "bank_id": "BNK1001"
+}
+
+
+JWT contains:
+
+{
+  "id": "BNK1001",
+  "role": "BANK"
+}
+
+2️⃣ BANK DASHBOARD APIs
+
+All below endpoints require:
+
+Authorization: Bearer <JWT_TOKEN>
+
+3️⃣ LOAN APPLICATION MANAGEMENT
+📋 3.1 Get All Pending Loan Applications
+GET /api/v1/bank/loan-applications
+
+Response
+[
+  {
+    "loan_id": "LN101",
+    "farmer_id": "FRM1023",
+    "farmer_name": "Ramesh Kumar",
+    "credit_score": 78,
+    "risk_level": "Low",
+    "requested_amount": 70000
+  }
+]
+
+👨‍🌾 3.2 View Farmer Complete Profile
+GET /api/v1/bank/farmer/{farmer_id}
+
+
+Returns:
+
+{
+  "farmer_name": "Ramesh Kumar",
+  "land_size_acres": 2,
+  "crop_type": "Wheat",
+  "ndvi_score": 0.72,
+  "rainfall_mm": 320,
+  "estimated_income": 44000,
+  "credit_score": 78
+}
+
+📊 3.3 Credit Score Breakdown
+GET /api/v1/bank/score-breakdown/{farmer_id}
+
+{
+  "farm_fundamentals": 25,
+  "crop_health": 22,
+  "historical_performance": 18,
+  "behavior": 13,
+  "total_score": 78
+}
+
+
+Transparency for lenders.
+
+4️⃣ LOAN DECISION APIs
+✅ 4.1 Approve Loan
+POST /api/v1/bank/loan/approve
+
+Request
+{
+  "loan_id": "LN101",
+  "approved_amount": 65000,
+  "interest_rate": 7.5,
+  "tenure_seasons": 2
+}
+
+Internal Logic
+
+Update loan_status = Approved
+
+Assign bank_id to loan
+
+Generate repayment schedule
+
+Response
+{
+  "message": "Loan approved",
+  "status": "Approved"
+}
+
+❌ 4.2 Reject Loan
+POST /api/v1/bank/loan/reject
+
+{
+  "loan_id": "LN101",
+  "reason": "High rainfall uncertainty"
+}
+
+5️⃣ LOAN DISBURSEMENT (MOCK)
+💸 5.1 Disburse Loan
+POST /api/v1/bank/loan/disburse
+
+{
+  "loan_id": "LN101"
+}
+
+Internal Logic
+
+status → Disbursed
+
+create transaction_id
+
+credit farmer wallet (mock)
+
+Response
+{
+  "transaction_id": "TXN89012",
+  "status": "Disbursed"
+}
+
+6️⃣ LOAN TRACKING APIs
+📅 6.1 Get Repayment Schedule
+GET /api/v1/bank/loan/schedule/{loan_id}
+
+📊 6.2 Track Loan Status
+GET /api/v1/bank/loan/status/{loan_id}
+
+7️⃣ FILTER & ANALYTICS APIs
+🔍 7.1 Filter by Score
+GET /api/v1/bank/filter?min_score=70
+
+🌾 7.2 Filter by Crop
+GET /api/v1/bank/filter?crop=Wheat
+
+🔐 SECURITY MODEL
+
+Role-based access:
+
+Role	Access
+FARMER	Own profile + loan apply
+BANK	All loan applications
+ADMIN	Full control
+
+JWT payload example:
+
+{
+  "id": "BNK1001",
+  "role": "BANK"
+}
+
+🧠 Final Architecture View
+
+Farmer Side
+→ Apply Loan
+
+System
+→ Calculate Score
+
+Bank Side
+→ View Application
+→ Analyze Risk
+→ Approve/Reject
+→ Disburse

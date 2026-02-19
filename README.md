@@ -94,7 +94,11 @@ curl https://agricreditbackend.vercel.app/
 
 ## 📋 Complete API Documentation
 
-### Implementation Status: ✅ 15/15 APIs (100% Complete)
+### Implementation Status: ✅ 27/28 APIs (96% Complete)
+
+**Farmer APIs:** 15/16 (94%)  
+**Bank APIs:** 12/12 (100%)  
+**Total System:** 27/28 (96%)
 
 ---
 
@@ -749,6 +753,836 @@ GET /api/v1/loan/history/FRM1000
 
 ---
 
+## 🏦 Module 6: Bank Side APIs (12 APIs)
+
+### Overview
+The bank module provides complete loan management capabilities for financial institutions including registration, authentication, application review, credit assessment, loan approval/rejection, disbursement, and tracking.
+
+---
+
+### 🔐 Bank Authentication (3 APIs)
+
+#### 1️⃣7️⃣ Register Bank ✅
+```http
+POST /api/v1/bank/register
+```
+
+**Request Body:**
+```json
+{
+  "bank_name": "Test Finance Ltd",
+  "contact_person": "John Doe",
+  "email": "john@testfinance.com",
+  "password": "securePass123",
+  "license_number": "TEST123456",
+  "bank_type": "NBFC"
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Bank registered successfully",
+  "data": {
+    "bank_id": "BNK1004",
+    "bank_name": "Test Finance Ltd",
+    "email": "john@testfinance.com"
+  }
+}
+```
+
+**Bank Types:**
+- `NBFC` - Non-Banking Financial Company
+- `RRB` - Regional Rural Bank
+- `Cooperative` - Cooperative Bank
+- `Commercial` - Commercial Bank
+- `Public` - Public Sector Bank
+
+**Validation:**
+- ✅ Email: Unique, valid format
+- ✅ License: Unique, alphanumeric
+- ✅ Password: Min 8 characters, hashed with bcrypt
+- ✅ Auto-generated bank_id (BNK####)
+
+---
+
+#### 1️⃣8️⃣ Login Bank ✅
+```http
+POST /api/v1/bank/login
+```
+
+**Request Body:**
+```json
+{
+  "email": "john@testfinance.com",
+  "password": "securePass123"
+}
+```
+
+**Alternative (using bank_id):**
+```json
+{
+  "bank_id": "BNK1004",
+  "password": "securePass123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "role": "BANK",
+    "bank_id": "BNK1004",
+    "bank_name": "Test Finance Ltd",
+    "email": "john@testfinance.com"
+  }
+}
+```
+
+**Features:**
+- ✅ JWT token with BANK role (7-day expiry)
+- ✅ Support for email or bank_id login
+- ✅ Bcrypt password verification
+- ✅ Role-based access control
+
+---
+
+#### 1️⃣9️⃣ Get Bank Profile ✅
+```http
+GET /api/v1/bank/profile
+```
+
+**Headers:**
+```
+Authorization: Bearer <bank_token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "bank_id": "BNK1004",
+    "bank_name": "Test Finance Ltd",
+    "contact_person": "John Doe",
+    "email": "john@testfinance.com",
+    "license_number": "TEST123456",
+    "bank_type": "NBFC",
+    "is_active": true,
+    "created_at": "2026-02-19T11:43:51.145106+00:00"
+  }
+}
+```
+
+---
+
+### 📊 Bank Dashboard (4 APIs)
+
+#### 2️⃣0️⃣ View Loan Applications ✅
+```http
+GET /api/v1/bank/loan-applications?status=pending&min_score=60
+```
+
+**Headers:**
+```
+Authorization: Bearer <bank_token>
+```
+
+**Query Parameters:**
+- `status` - Filter by loan status (pending, approved, rejected, disbursed)
+- `min_score` - Minimum trust score (0-100)
+- `max_score` - Maximum trust score
+- `crop` - Filter by crop type
+- `state` - Filter by state
+- `risk_level` - Filter by risk (Low, Medium, High)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "total_applications": 2,
+  "data": [
+    {
+      "loan_id": "LOAN1003",
+      "farmer_id": "FRM1000",
+      "farmer_name": "Rajesh Kumar",
+      "farmer_mobile": "9876543210",
+      "location": {
+        "state": "Uttar Pradesh",
+        "district": "Rampur",
+        "village": "Bilaspur"
+      },
+      "requested_amount": 150000,
+      "interest_rate": 8.5,
+      "duration_months": 12,
+      "loan_purpose": "Crop cultivation - Wheat",
+      "credit_score": 79,
+      "risk_level": "Low",
+      "loan_status": "pending",
+      "application_date": "2026-02-19T12:02:54.844521+00:00",
+      "lender_name": "Pending Bank Assignment"
+    }
+  ]
+}
+```
+
+---
+
+#### 2️⃣1️⃣ Get Farmer Profile ✅
+```http
+GET /api/v1/bank/farmer/:farmer_id
+```
+
+**Headers:**
+```
+Authorization: Bearer <bank_token>
+```
+
+**Example:**
+```bash
+GET /api/v1/bank/farmer/FRM1000
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "farmer_details": {
+      "farmer_id": "FRM1000",
+      "farmer_name": "Rajesh Kumar",
+      "mobile_number": "9876543210",
+      "aadhaar_verified": true,
+      "verification_status": "mock_verified",
+      "location": {
+        "village": "Bilaspur",
+        "district": "Rampur",
+        "state": "Uttar Pradesh"
+      },
+      "profile_completion": 85
+    },
+    "credit_assessment": {
+      "credit_score": 79,
+      "risk_level": "Low",
+      "last_updated": "2026-02-19T12:02:52.393848+00:00"
+    },
+    "farm_details": {
+      "total_farms": 1,
+      "total_land_acres": 5.5,
+      "farms": [
+        {
+          "farm_id": "FARM1000",
+          "land_size_acres": 5.5,
+          "irrigation_type": "Canal",
+          "soil_type": "Loamy",
+          "location": {
+            "state": "Uttar Pradesh",
+            "district": "Rampur",
+            "village": "Bilaspur"
+          }
+        }
+      ]
+    },
+    "crop_details": {
+      "total_crops": 1,
+      "active_crops": 1,
+      "crops": [
+        {
+          "crop_id": "CROP1000",
+          "crop_type": "Wheat",
+          "season": "Rabi",
+          "area_acres": 5.5,
+          "expected_yield_qtl": 110,
+          "crop_status": "growing",
+          "sowing_date": "2025-11-15"
+        }
+      ]
+    },
+    "financial_summary": {
+      "estimated_annual_income": 220000,
+      "total_loans": 4,
+      "active_loans": 3,
+      "total_borrowed": 550000,
+      "total_repaid": 5000
+    },
+    "loan_history": [
+      {
+        "loan_id": "LOAN1003",
+        "loan_amount": 150000,
+        "loan_status": "pending",
+        "application_date": "2026-02-19T12:02:54.844521+00:00",
+        "amount_repaid": 0
+      }
+    ]
+  }
+}
+```
+
+**Features:**
+- ✅ Complete farmer profile with all details
+- ✅ Credit assessment and risk level
+- ✅ Farm and crop information
+- ✅ Financial summary and loan history
+- ✅ Estimated annual income calculation
+
+---
+
+#### 2️⃣2️⃣ Get Credit Score Breakdown ✅
+```http
+GET /api/v1/bank/score-breakdown/:farmer_id
+```
+
+**Headers:**
+```
+Authorization: Bearer <bank_token>
+```
+
+**Example:**
+```bash
+GET /api/v1/bank/score-breakdown/FRM1000
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "farmer_id": "FRM1000",
+    "farmer_name": "Rajesh Kumar",
+    "total_score": 79,
+    "risk_level": "Low",
+    "breakdown": {
+      "farm_fundamentals": {
+        "score": 30,
+        "max_score": 30,
+        "percentage": "100.0",
+        "weight": "30%"
+      },
+      "crop_health": {
+        "score": 30,
+        "max_score": 30,
+        "percentage": "100.0",
+        "weight": "30%"
+      },
+      "historical_performance": {
+        "score": 5,
+        "max_score": 25,
+        "percentage": "20.0",
+        "weight": "25%"
+      },
+      "farmer_behavior": {
+        "score": 14,
+        "max_score": 15,
+        "percentage": "93.3",
+        "weight": "15%"
+      }
+    },
+    "recommendation": "Low Risk - Recommend Approval"
+  }
+}
+```
+
+**Score Components:**
+1. **Farm Fundamentals (30%)**: Registration, GPS, land ownership
+2. **Crop Health (30%)**: NDVI-based monitoring
+3. **Historical Performance (25%)**: Yield achievement, diversity
+4. **Farmer Behavior (15%)**: Profile completion, verification
+
+**Risk Levels:**
+- **Low Risk (70-100)**: Recommend approval
+- **Medium Risk (40-69)**: Conditional approval
+- **High Risk (0-39)**: Recommend rejection
+
+---
+
+#### 2️⃣3️⃣ Filter Loan Applications ✅
+```http
+GET /api/v1/bank/filter?min_score=60&max_score=100&status=pending&crop=Wheat
+```
+
+**Headers:**
+```
+Authorization: Bearer <bank_token>
+```
+
+**Query Parameters:**
+- `min_score` - Minimum trust score (0-100)
+- `max_score` - Maximum trust score (0-100)
+- `crop` - Crop type (Wheat, Rice, Cotton, etc.)
+- `state` - State name
+- `district` - District name
+- `status` - Loan status
+- `risk_level` - Risk level (Low, Medium, High)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "total_results": 2,
+  "filters_applied": {
+    "min_score": "60",
+    "status": "pending"
+  },
+  "data": [
+    {
+      "loan_id": "LOAN1003",
+      "farmer_id": "FRM1000",
+      "farmer_name": "Rajesh Kumar",
+      "requested_amount": 150000,
+      "credit_score": 79,
+      "risk_level": "Low",
+      "loan_status": "pending",
+      "application_date": "2026-02-19T12:02:54.844521+00:00"
+    }
+  ]
+}
+```
+
+---
+
+### 💰 Loan Management (5 APIs)
+
+#### 2️⃣4️⃣ Approve Loan ✅
+```http
+POST /api/v1/bank/loan/approve
+```
+
+**Headers:**
+```
+Authorization: Bearer <bank_token>
+```
+
+**Request Body:**
+```json
+{
+  "loan_id": "LOAN1003",
+  "approved_amount": 140000,
+  "interest_rate": 8.0,
+  "tenure_seasons": 2
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Loan approved successfully",
+  "data": {
+    "loan_id": "LOAN1003",
+    "farmer_id": "FRM1000",
+    "farmer_name": "Rajesh Kumar",
+    "status": "approved",
+    "approved_amount": 140000,
+    "interest_rate": 8,
+    "tenure_seasons": 2,
+    "emi_amount": 12178,
+    "total_payable": 146141,
+    "approval_date": "2026-02-19T12:03:13.44+00:00",
+    "repayment_due_date": "2027-02-19",
+    "next_steps": [
+      "✅ Loan approved",
+      "📄 Complete documentation",
+      "💰 Proceed to disbursement",
+      "📱 Farmer will be notified"
+    ]
+  }
+}
+```
+
+**Features:**
+- ✅ Approve with custom amount (can differ from requested)
+- ✅ Adjust interest rate
+- ✅ Set tenure in seasons
+- ✅ Auto-calculate EMI using compound interest
+- ✅ Updates loan status to 'approved'
+- ✅ Records approval date and bank_id
+
+**EMI Calculation:**
+```
+P = Principal (approved_amount)
+r = Monthly interest rate (annual_rate / 12 / 100)
+n = Number of months (duration_months)
+
+EMI = [P × r × (1 + r)^n] / [(1 + r)^n - 1]
+Total Payable = EMI × n
+```
+
+---
+
+#### 2️⃣5️⃣ Reject Loan ✅
+```http
+POST /api/v1/bank/loan/reject
+```
+
+**Headers:**
+```
+Authorization: Bearer <bank_token>
+```
+
+**Request Body:**
+```json
+{
+  "loan_id": "LOAN1001",
+  "rejection_reason": "Insufficient crop history and low trust score"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Loan rejected successfully",
+  "data": {
+    "loan_id": "LOAN1001",
+    "farmer_id": "FRM1000",
+    "farmer_name": "Rajesh Kumar",
+    "status": "rejected",
+    "rejection_reason": "Insufficient crop history and low trust score",
+    "rejection_date": "2026-02-19T12:05:30.000Z",
+    "next_steps": [
+      "📧 Farmer will be notified",
+      "📊 Improve trust score by:",
+      "  - Adding more crops",
+      "  - Maintaining good farming practices",
+      "  - Completing profile information"
+    ]
+  }
+}
+```
+
+**Common Rejection Reasons:**
+- Low credit score (< 40)
+- Insufficient farming history
+- High existing debt burden
+- Incomplete documentation
+- Failed verification
+- Risk assessment concerns
+
+---
+
+#### 2️⃣6️⃣ Disburse Loan ✅
+```http
+POST /api/v1/bank/loan/disburse
+```
+
+**Headers:**
+```
+Authorization: Bearer <bank_token>
+```
+
+**Request Body:**
+```json
+{
+  "loan_id": "LOAN1003"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Loan disbursed successfully",
+  "data": {
+    "loan_id": "LOAN1003",
+    "farmer_id": "FRM1000",
+    "farmer_name": "Rajesh Kumar",
+    "farmer_mobile": "9876543210",
+    "status": "disbursed",
+    "disbursed_amount": 140000,
+    "transaction_id": "TXN1771502597809",
+    "disbursement_date": "2026-02-19T12:03:17.809Z",
+    "disbursement_method": "Bank Transfer (Mock)",
+    "next_steps": [
+      "✅ Loan disbursed successfully",
+      "💰 Amount credited to farmer account",
+      "📱 SMS notification sent to farmer",
+      "📊 Repayment tracking activated",
+      "🔔 EMI reminders will be sent"
+    ]
+  }
+}
+```
+
+**Features:**
+- ✅ Validates loan is approved before disbursement
+- ✅ Generates unique transaction ID
+- ✅ Updates loan status to 'disbursed'
+- ✅ Records disbursement date
+- ✅ Mock implementation (ready for payment gateway integration)
+
+**Prerequisites:**
+- Loan must be in 'approved' status
+- Bank must be the approving bank
+- Amount must be set (approved_amount)
+
+---
+
+#### 2️⃣7️⃣ Get Repayment Schedule ✅
+```http
+GET /api/v1/bank/loan/schedule/:loan_id
+```
+
+**Headers:**
+```
+Authorization: Bearer <bank_token>
+```
+
+**Example:**
+```bash
+GET /api/v1/bank/loan/schedule/LOAN1003
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "loan_id": "LOAN1003",
+    "farmer_name": "Rajesh Kumar",
+    "loan_amount": 140000,
+    "emi_amount": 12178,
+    "duration_months": 12,
+    "total_payable": 146141,
+    "amount_repaid": 0,
+    "outstanding": 146141,
+    "schedule": [
+      {
+        "installment_number": 1,
+        "due_date": "2026-03-19",
+        "emi_amount": 12178,
+        "status": "pending"
+      },
+      {
+        "installment_number": 2,
+        "due_date": "2026-04-19",
+        "emi_amount": 12178,
+        "status": "pending"
+      },
+      {
+        "installment_number": 3,
+        "due_date": "2026-05-19",
+        "emi_amount": 12178,
+        "status": "pending"
+      },
+      {
+        "installment_number": 4,
+        "due_date": "2026-06-19",
+        "emi_amount": 12178,
+        "status": "pending"
+      },
+      {
+        "installment_number": 5,
+        "due_date": "2026-07-19",
+        "emi_amount": 12178,
+        "status": "pending"
+      },
+      {
+        "installment_number": 6,
+        "due_date": "2026-08-19",
+        "emi_amount": 12178,
+        "status": "pending"
+      },
+      {
+        "installment_number": 7,
+        "due_date": "2026-09-19",
+        "emi_amount": 12178,
+        "status": "pending"
+      },
+      {
+        "installment_number": 8,
+        "due_date": "2026-10-19",
+        "emi_amount": 12178,
+        "status": "pending"
+      },
+      {
+        "installment_number": 9,
+        "due_date": "2026-11-19",
+        "emi_amount": 12178,
+        "status": "pending"
+      },
+      {
+        "installment_number": 10,
+        "due_date": "2026-12-19",
+        "emi_amount": 12178,
+        "status": "pending"
+      },
+      {
+        "installment_number": 11,
+        "due_date": "2027-01-19",
+        "emi_amount": 12178,
+        "status": "pending"
+      },
+      {
+        "installment_number": 12,
+        "due_date": "2027-02-19",
+        "emi_amount": 12178,
+        "status": "pending"
+      }
+    ]
+  }
+}
+```
+
+**Features:**
+- ✅ Generates complete repayment schedule
+- ✅ Shows installment-wise breakdown
+- ✅ Calculates due dates based on disbursement date
+- ✅ Shows payment status for each installment
+- ✅ Displays outstanding and repaid amounts
+
+---
+
+#### 2️⃣8️⃣ Track Loan Status ✅
+```http
+GET /api/v1/bank/loan/track/:loan_id
+```
+
+**Headers:**
+```
+Authorization: Bearer <bank_token>
+```
+
+**Example:**
+```bash
+GET /api/v1/bank/loan/track/LOAN1003
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "loan_details": {
+      "loan_id": "LOAN1003",
+      "farmer_id": "FRM1000",
+      "farmer_name": "Rajesh Kumar",
+      "farmer_mobile": "9876543210",
+      "loan_status": "disbursed",
+      "loan_amount": 150000,
+      "approved_amount": 140000,
+      "interest_rate": 8,
+      "duration_months": 12
+    },
+    "dates": {
+      "application_date": "2026-02-19T12:02:54.844521+00:00",
+      "approval_date": "2026-02-19T12:03:13.44+00:00",
+      "disbursement_date": "2026-02-19T12:03:17.809+00:00",
+      "repayment_due_date": "2027-02-19"
+    },
+    "financial_summary": {
+      "total_payable": 146141,
+      "amount_repaid": 0,
+      "outstanding_amount": 146141,
+      "repayment_percentage": "0.00%",
+      "emi_amount": 12178
+    },
+    "repayment_history": []
+  }
+}
+```
+
+**Features:**
+- ✅ Complete loan lifecycle tracking
+- ✅ All key dates (application, approval, disbursement)
+- ✅ Financial summary with repayment percentage
+- ✅ Repayment history with transaction details
+- ✅ Real-time loan status updates
+
+---
+
+### 🔄 Complete Bank Workflow Example
+
+Here's how a bank uses the APIs from start to finish:
+
+```bash
+# 1. Register Bank
+curl -X POST http://localhost:3000/api/v1/bank/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bank_name": "AgriFinance Ltd",
+    "contact_person": "Manager Name",
+    "email": "manager@agrifinance.com",
+    "password": "securepass123",
+    "license_number": "NBFC123456",
+    "bank_type": "NBFC"
+  }'
+
+# 2. Login to get token
+curl -X POST http://localhost:3000/api/v1/bank/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "manager@agrifinance.com",
+    "password": "securepass123"
+  }'
+# Save the token from response
+
+# 3. View pending applications
+curl -X GET "http://localhost:3000/api/v1/bank/loan-applications?status=pending" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# 4. Analyze farmer credit score
+curl -X GET http://localhost:3000/api/v1/bank/score-breakdown/FRM1000 \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# 5. Get complete farmer profile
+curl -X GET http://localhost:3000/api/v1/bank/farmer/FRM1000 \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# 6. Approve loan
+curl -X POST http://localhost:3000/api/v1/bank/loan/approve \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "loan_id": "LOAN1003",
+    "approved_amount": 140000,
+    "interest_rate": 8.0,
+    "tenure_seasons": 2
+  }'
+
+# 7. Get repayment schedule
+curl -X GET http://localhost:3000/api/v1/bank/loan/schedule/LOAN1003 \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# 8. Disburse loan
+curl -X POST http://localhost:3000/api/v1/bank/loan/disburse \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "loan_id": "LOAN1003"
+  }'
+
+# 9. Track loan status
+curl -X GET http://localhost:3000/api/v1/bank/loan/track/LOAN1003 \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+---
+
+### 🎯 Bank API Summary
+
+| # | Endpoint | Method | Description | Auth |
+|---|----------|--------|-------------|------|
+| 17 | `/api/v1/bank/register` | POST | Register new bank | None |
+| 18 | `/api/v1/bank/login` | POST | Bank login | None |
+| 19 | `/api/v1/bank/profile` | GET | Get bank profile | BANK |
+| 20 | `/api/v1/bank/loan-applications` | GET | View loan applications | BANK |
+| 21 | `/api/v1/bank/farmer/:farmer_id` | GET | Get farmer profile | BANK |
+| 22 | `/api/v1/bank/score-breakdown/:farmer_id` | GET | Credit score breakdown | BANK |
+| 23 | `/api/v1/bank/filter` | GET | Filter applications | BANK |
+| 24 | `/api/v1/bank/loan/approve` | POST | Approve loan | BANK |
+| 25 | `/api/v1/bank/loan/reject` | POST | Reject loan | BANK |
+| 26 | `/api/v1/bank/loan/disburse` | POST | Disburse loan | BANK |
+| 27 | `/api/v1/bank/loan/schedule/:loan_id` | GET | Get repayment schedule | BANK |
+| 28 | `/api/v1/bank/loan/track/:loan_id` | GET | Track loan status | BANK |
+
+**Total Bank APIs:** 12/12 (100% Complete) ✅
+
+---
+
 ## 🧪 Testing
 
 ### Test Production API
@@ -856,13 +1690,17 @@ loans (
   id UUID PRIMARY KEY,
   loan_id TEXT UNIQUE,
   farmer_id TEXT REFERENCES farmers(farmer_id),
+  bank_id TEXT REFERENCES banks(bank_id),
   loan_amount DECIMAL(12,2),
+  approved_amount DECIMAL(12,2),
   interest_rate DECIMAL(5,2),
   loan_duration_months INTEGER,
+  tenure_seasons INTEGER,
   loan_purpose TEXT,
   trust_score_at_application INTEGER,
   risk_level TEXT,
   loan_status TEXT DEFAULT 'pending',
+  rejection_reason TEXT,
   application_date TIMESTAMP,
   approval_date TIMESTAMP,
   disbursement_date TIMESTAMP,
@@ -873,6 +1711,7 @@ loans (
   lender_name TEXT,
   lender_type TEXT,
   collateral_type TEXT,
+  transaction_id TEXT,
   created_at TIMESTAMP,
   updated_at TIMESTAMP
 )
@@ -892,11 +1731,36 @@ loan_repayments (
 )
 ```
 
-**Total Tables:** 5  
-**Total Relationships:** 4 Foreign Keys with CASCADE  
+### 6. Banks Table ✨ NEW
+```sql
+banks (
+  id UUID PRIMARY KEY,
+  bank_id TEXT UNIQUE,
+  bank_name TEXT NOT NULL,
+  contact_person TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  license_number TEXT UNIQUE NOT NULL,
+  bank_type TEXT DEFAULT 'NBFC',
+  role TEXT DEFAULT 'BANK',
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP
+)
+```
+
+**Total Tables:** 6  
+**Total Relationships:** 5 Foreign Keys with CASCADE  
 **Security:** Row Level Security (RLS) enabled on all tables
 
-## 🔄 Environment Switching
+### Database Relationships
+- `farms.farmer_id` → `farmers.farmer_id`
+- `crops.farm_id` → `farms.farm_id`
+- `loans.farmer_id` → `farmers.farmer_id`
+- `loans.bank_id` → `banks.bank_id` ✨ NEW
+- `loan_repayments.loan_id` → `loans.loan_id`
+
+---
 
 The project uses **centralized configuration** for easy environment switching.
 
@@ -1074,15 +1938,31 @@ ISC License
 
 | Module | APIs | Status | Completion |
 |--------|------|--------|------------|
-| Authentication | 2/3 | ✅ Complete | 67% |
-| Farm Management | 2/2 | ✅ Complete | 100% |
-| Data Validation | 3/3 | ✅ Complete | 100% |
-| Trust Score Engine | 2/2 | ✅ Complete | 100% |
-| Loan Management | 6/6 | ✅ Complete | 100% |
-| **Total** | **15/16** | **✅ Complete** | **94%** |
+| **Farmer Authentication** | 2/3 | ✅ Complete | 67% |
+| **Farm Management** | 2/2 | ✅ Complete | 100% |
+| **Data Validation** | 3/3 | ✅ Complete | 100% |
+| **Trust Score Engine** | 2/2 | ✅ Complete | 100% |
+| **Loan Management** | 6/6 | ✅ Complete | 100% |
+| **Bank Side APIs** | 12/12 | ✅ Complete | 100% |
+| **Total** | **27/28** | **✅ Complete** | **96%** |
 
-**Overall Progress**: 15/16 APIs Implemented = **94% Complete**  
+**Overall Progress**: 27/28 APIs Implemented = **96% Complete**  
 _(Password Reset skipped per user request)_
+
+### Module Breakdown
+
+#### Farmer Side (15 APIs)
+- ✅ Authentication: Register, Login
+- ✅ Farm Management: Add Farm, View Farms
+- ✅ Crop Management: Add Crop (via farm APIs)
+- ✅ Data Validation: Weather, NDVI, Market Price
+- ✅ Trust Score: Calculate, Get Score
+- ✅ Loan Lifecycle: Offers, Apply, Status, Accept, Repay, History
+
+#### Bank Side (12 APIs)
+- ✅ Authentication: Register, Login, Profile
+- ✅ Dashboard: View Applications, Farmer Profile, Score Breakdown, Filter
+- ✅ Loan Management: Approve, Reject, Disburse, Schedule, Track
 
 ---
 

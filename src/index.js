@@ -18,6 +18,7 @@ const cropRoutes = require('./routes/cropRoutes');
 const validationRoutes = require('./routes/validationRoutes');
 const trustScoreRoutes = require('./routes/trustScoreRoutes');
 const loanRoutes = require('./routes/loanRoutes');
+const bankRoutes = require('./routes/bankRoutes');
 
 // Mount routes
 app.use('/api/v1/auth', authRoutes);
@@ -26,6 +27,7 @@ app.use('/api/v1/crop', cropRoutes);
 app.use('/api/v1/validation', validationRoutes);
 app.use('/api/v1/trust-score', trustScoreRoutes);
 app.use('/api/v1/loan', loanRoutes);
+app.use('/api/v1/bank', bankRoutes);
 app.use('/api/farmers', farmerRoutes);
 
 app.get('/', (req, res) => {
@@ -41,6 +43,7 @@ app.get('/', (req, res) => {
             validation: '/api/v1/validation',
             trustScore: '/api/v1/trust-score',
             loan: '/api/v1/loan',
+            bank: '/api/v1/bank',
             farmers: '/api/farmers'
         }
     });

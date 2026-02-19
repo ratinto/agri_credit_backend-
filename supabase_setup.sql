@@ -197,13 +197,17 @@ CREATE TABLE IF NOT EXISTS public.loans (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     loan_id TEXT UNIQUE NOT NULL,
     farmer_id TEXT NOT NULL REFERENCES public.farmers(farmer_id) ON DELETE CASCADE,
+    bank_id TEXT REFERENCES public.banks(bank_id) ON DELETE SET NULL,
     loan_amount DECIMAL(12, 2) NOT NULL,
+    approved_amount DECIMAL(12, 2),
     interest_rate DECIMAL(5, 2) NOT NULL,
     loan_duration_months INTEGER NOT NULL,
+    tenure_seasons INTEGER,
     loan_purpose TEXT,
     trust_score_at_application INTEGER,
     risk_level TEXT,
     loan_status TEXT DEFAULT 'pending',
+    rejection_reason TEXT,
     application_date TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     approval_date TIMESTAMP WITH TIME ZONE,
     disbursement_date TIMESTAMP WITH TIME ZONE,
@@ -214,6 +218,7 @@ CREATE TABLE IF NOT EXISTS public.loans (
     lender_name TEXT,
     lender_type TEXT,
     collateral_type TEXT,
+    transaction_id TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -289,4 +294,61 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Create Banks table
+CREATE TABLE IF NOT EXISTS public.banks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    bank_id TEXT UNIQUE NOT NULL,
+    bank_name TEXT NOT NULL,
+    contact_person TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    license_number TEXT UNIQUE NOT NULL,
+    bank_type TEXT DEFAULT 'NBFC',
+    role TEXT DEFAULT 'BANK',
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS for banks
+ALTER TABLE public.banks ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Allow public read access" ON public.banks;
+DROP POLICY IF EXISTS "Allow public insert" ON public.banks;
+DROP POLICY IF EXISTS "Allow banks to update own profile" ON public.banks;
+
+-- Create policies for banks
+CREATE POLICY "Allow public read access" ON public.banks
+    FOR SELECT USING (true);
+
+CREATE POLICY "Allow public insert" ON public.banks
+    FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow banks to update own profile" ON public.banks
+    FOR UPDATE USING (true);
+
+-- Drop existing trigger if it exists and create new one
+DROP TRIGGER IF EXISTS update_banks_updated_at ON public.banks;
+CREATE TRIGGER update_banks_updated_at BEFORE UPDATE ON public.banks
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Create sequence for bank_id generation (starting after mock data)
+CREATE SEQUENCE IF NOT EXISTS bank_id_seq START WITH 1004;
+
+-- Create function to get next bank ID
+CREATE OR REPLACE FUNCTION get_next_bank_id()
+RETURNS INTEGER AS $$
+BEGIN
+    RETURN nextval('bank_id_seq');
+END;
+$$ LANGUAGE plpgsql;
+
+-- Insert mock banks data
+INSERT INTO public.banks (bank_id, bank_name, contact_person, email, password_hash, license_number, bank_type)
+VALUES 
+('BNK1001', 'GreenAgro Finance Ltd', 'Amit Sharma', 'amit@greenagro.com', '$2a$10$mockHashedPassword5', 'NBFC123456', 'NBFC'),
+('BNK1002', 'Rural Development Bank', 'Priya Mehta', 'priya@rdb.com', '$2a$10$mockHashedPassword6', 'RRB789012', 'RRB'),
+('BNK1003', 'Kisan Credit Cooperative', 'Suresh Patel', 'suresh@kcc.com', '$2a$10$mockHashedPassword7', 'COOP345678', 'Cooperative')
+ON CONFLICT (bank_id) DO NOTHING;
 
