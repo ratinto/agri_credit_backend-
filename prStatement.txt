@@ -1,0 +1,173 @@
+🌾 Agri Credit Platform
+Backend API Documentation (Mock Aadhaar Version)
+1️⃣ AUTHENTICATION MODULE
+🔐 1.1 Register Farmer
+Endpoint
+POST /api/v1/auth/register
+
+Description
+
+Registers farmer using Aadhaar + password.
+Aadhaar validation is mocked.
+
+Request
+{
+  "aadhaar_number": "123412341234",
+  "full_name": "Ramesh Kumar",
+  "mobile_number": "9876543210",
+  "password": "securePassword123",
+  "language_preference": "Hindi"
+}
+
+Validation Rules
+
+Aadhaar must be 12 digits
+
+Mobile must be 10 digits
+
+Password min 8 characters
+
+Aadhaar must be unique
+
+Mock Aadhaar Logic
+
+If Aadhaar = 12 digits → mark as verified = true
+
+Store verification_status = "mock_verified"
+
+Response
+{
+  "message": "Farmer registered successfully",
+  "farmer_id": "FRM1023",
+  "aadhaar_status": "mock_verified"
+}
+
+🔐 1.2 Login Farmer
+POST /api/v1/auth/login
+
+Request
+{
+  "aadhaar_number": "123412341234",
+  "password": "securePassword123"
+}
+
+Response
+{
+  "token": "jwt_token_here",
+  "farmer_id": "FRM1023"
+}
+
+🔐 1.3 Reset Password
+POST /api/v1/auth/reset-password
+
+2️⃣ FARM MANAGEMENT MODULE
+🌾 2.1 Add Farm
+POST /api/v1/farm/add
+
+{
+  "farmer_id": "FRM1023",
+  "land_size_acres": 2,
+  "gps_lat": 29.0588,
+  "gps_long": 76.0856,
+  "state": "Haryana",
+  "district": "Sonipat",
+  "irrigation_type": "Canal"
+}
+
+🌾 2.2 Add Crop
+POST /api/v1/crop/add
+
+{
+  "farm_id": "FARM234",
+  "crop_type": "Wheat",
+  "season": "Kharif",
+  "sowing_date": "2026-06-10"
+}
+
+3️⃣ DATA VALIDATION MODULE (External Integrations)
+
+These APIs call external providers internally.
+
+🛰 3.1 Fetch NDVI
+GET /api/v1/validation/ndvi/{farm_id}
+
+
+Integrates:
+
+Sentinel Hub
+
+Google Earth Engine
+
+Response:
+
+{
+  "ndvi_score": 0.72,
+  "health_status": "Healthy"
+}
+
+🌧 3.2 Fetch Weather Data
+GET /api/v1/validation/weather/{farm_id}
+
+
+Integrates:
+
+OpenWeather
+
+Response:
+
+{
+  "rainfall_mm": 320,
+  "drought_risk": "Low"
+}
+
+💰 3.3 Fetch Market Price
+GET /api/v1/validation/market-price/{crop}
+
+
+Integrates:
+
+Agmarknet
+
+Response:
+
+{
+  "crop": "Wheat",
+  "price_per_quintal": 2200
+}
+
+4️⃣ AGRI-TRUST SCORE ENGINE
+🤖 4.1 Calculate Score
+POST /api/v1/score/calculate
+
+Internal Logic Weights
+
+Farm fundamentals → 30%
+
+Crop health (NDVI + rainfall) → 30%
+
+Historical performance → 25%
+
+Behavioral pattern → 15%
+
+Response
+{
+  "score": 78,
+  "risk_level": "Low",
+  "eligible_loan_range": "60000-80000"
+}
+
+📊 4.2 Get Score
+GET /api/v1/score/{farmer_id}
+
+5️⃣ LOAN MODULE
+💰 5.1 Check Eligibility
+GET /api/v1/loan/eligibility/{farmer_id}
+
+🏦 5.2 Apply Loan
+POST /api/v1/loan/apply
+
+{
+  "farmer_id": "FRM1023",
+  "requested_amount": 70000,
+  "tenure_seasons": 2
+}

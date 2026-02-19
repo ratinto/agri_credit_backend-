@@ -1,3 +1,18 @@
+## 🗄️ Database Setup Instructions
+
+### Step 1: Access Supabase SQL Editor
+
+1. Go to: https://supabase.com/dashboard/project/wfhjhclkjttaquzdbibx
+2. Click on **SQL Editor** in the left sidebar
+3. Click **New Query**
+
+### Step 2: Execute Database Setup
+
+Copy and paste the entire contents of `supabase_setup.sql` into the SQL Editor and click **Run**.
+
+Alternatively, you can run this SQL directly:
+
+```sql
 -- Create Farmers table with authentication fields
 CREATE TABLE IF NOT EXISTS public.farmers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -59,7 +74,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Insert mock data (updated for new schema)
--- Note: In production, passwords would be properly hashed
 INSERT INTO public.farmers (farmer_id, aadhaar_number, full_name, mobile_number, password_hash, language_preference, aadhaar_verified, verification_status, village, district, state, trust_score, risk_level, profile_completion)
 VALUES 
 ('FRM1000', '123456789012', 'Rajesh Kumar', '9876543210', '$2a$10$mockHashedPassword1', 'Hindi', true, 'mock_verified', 'Bilaspur', 'Rampur', 'Uttar Pradesh', 82, 'Low', 85),
@@ -67,4 +81,82 @@ VALUES
 ('FRM1002', '123456789014', 'Anita Devi', '9876543212', '$2a$10$mockHashedPassword3', 'Hindi', true, 'mock_verified', 'Kishanpur', 'Supaul', 'Bihar', 71, 'Low', 60),
 ('FRM1003', '123456789015', 'Vikram Mehta', '9876543213', '$2a$10$mockHashedPassword4', 'English', true, 'mock_verified', 'Palampur', 'Kangra', 'Himachal Pradesh', 45, 'High', 40)
 ON CONFLICT (aadhaar_number) DO NOTHING;
+```
 
+### Step 3: Verify Setup
+
+After running the SQL, verify the setup by running this query:
+
+```sql
+SELECT * FROM public.farmers;
+```
+
+You should see 4 mock farmers in the database.
+
+---
+
+## ✅ Once Database is Setup, Test the API
+
+### Test 1: Successful Registration
+
+```bash
+curl -X POST http://localhost:5000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "aadhaar_number": "999999999999",
+    "full_name": "Test Farmer",
+    "mobile_number": "8888888888",
+    "password": "password123",
+    "language_preference": "English"
+  }'
+```
+
+**Expected Response:**
+```json
+{
+  "message": "Farmer registered successfully",
+  "farmer_id": "FRM1004",
+  "aadhaar_status": "mock_verified"
+}
+```
+
+### Test 2: Invalid Aadhaar (Should Fail)
+
+```bash
+curl -X POST http://localhost:5000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "aadhaar_number": "12345",
+    "full_name": "Test Farmer",
+    "mobile_number": "8888888888",
+    "password": "password123"
+  }'
+```
+
+**Expected Response:**
+```json
+{
+  "error": "Invalid Aadhaar number",
+  "message": "Aadhaar must be exactly 12 digits"
+}
+```
+
+### Test 3: Duplicate Aadhaar (Should Fail)
+
+Try registering with `aadhaar_number: "999999999999"` again - should get conflict error.
+
+---
+
+## 🎯 Current Status
+
+✅ Server is running on: http://localhost:5000  
+✅ Environment configured  
+⏳ Database setup needed (follow steps above)  
+✅ Register Farmer API ready to test  
+
+## 📞 API Endpoints Available
+
+- `GET /` - API info
+- `POST /api/v1/auth/register` - Register new farmer
+- `POST /api/v1/auth/login` - Login (stub)
+- `POST /api/v1/auth/reset-password` - Reset password (stub)
