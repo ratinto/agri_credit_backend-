@@ -147,10 +147,69 @@ exports.registerFarmer = async (req, res) => {
  */
 exports.loginFarmer = async (req, res) => {
     try {
-        // TODO: Implement login
-        res.status(501).json({ message: 'Login API - Coming soon' });
+        const { aadhaar_number, password } = req.body;
+
+        // Validation: Check if required fields are provided
+        if (!aadhaar_number || !password) {
+            return res.status(400).json({
+                error: 'Missing required fields',
+                message: 'aadhaar_number and password are required'
+            });
+        }
+
+        // Validate Aadhaar number format
+        if (!validateAadhaar(aadhaar_number)) {
+            return res.status(400).json({
+                error: 'Invalid Aadhaar number',
+                message: 'Aadhaar must be exactly 12 digits'
+            });
+        }
+
+        // Find farmer by Aadhaar number
+        const { data: farmer, error: fetchError } = await supabase
+            .from('farmers')
+            .select('*')
+            .eq('aadhaar_number', aadhaar_number)
+            .single();
+
+        if (fetchError || !farmer) {
+            return res.status(401).json({
+                error: 'Invalid credentials',
+                message: 'Aadhaar number or password is incorrect'
+            });
+        }
+
+        // Verify password
+        const isPasswordValid = await bcrypt.compare(password, farmer.password_hash);
+
+        if (!isPasswordValid) {
+            return res.status(401).json({
+                error: 'Invalid credentials',
+                message: 'Aadhaar number or password is incorrect'
+            });
+        }
+
+        // Generate JWT token
+        const token = generateToken({
+            farmer_id: farmer.farmer_id,
+            aadhaar_number: farmer.aadhaar_number,
+            full_name: farmer.full_name
+        });
+
+        // Return success response with token
+        return res.status(200).json({
+            token: token,
+            farmer_id: farmer.farmer_id,
+            full_name: farmer.full_name,
+            message: 'Login successful'
+        });
+
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Login Error:', error);
+        return res.status(500).json({
+            error: 'Login failed',
+            message: error.message
+        });
     }
 };
 

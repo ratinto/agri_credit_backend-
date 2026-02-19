@@ -121,7 +121,9 @@ Before testing, ensure:
 - Generate JWT token
 - Return token + farmer_id
 
-### 🔐 1.3 Reset Password
+**STATUS:** ✅ **COMPLETE!**
+
+### 🔐 1.3 Reset Password (NEXT)
 - Endpoint: `POST /api/v1/auth/reset-password`
 
 ### 🌾 2.1 Add Farm
@@ -139,5 +141,5 @@ And more...
 For testing instructions, see: `API_TESTS.md`  
 For problem statement reference, see: `prStatement.txt`
 
-**Current Implementation:** 1/15 APIs Complete (6.7%)
-**Status:** Register Farmer API ✅ DONE
+**Current Implementation:** 2/15 APIs Complete (13.3%)
+**Status:** Login Farmer API ✅ DONE

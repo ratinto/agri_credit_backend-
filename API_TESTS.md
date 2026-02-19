@@ -175,3 +175,181 @@ Table: `farmers`
 - `verification_status` (TEXT)
 - `created_at` (TIMESTAMP)
 - `updated_at` (TIMESTAMP)
+
+---
+
+## 2. Login Farmer API
+
+### Endpoint
+```
+POST http://localhost:5000/api/v1/auth/login
+Content-Type: application/json
+```
+
+### Test Case 1: Successful Login
+```json
+{
+  "aadhaar_number": "123412341234",
+  "password": "securePassword123"
+}
+```
+
+**Expected Response (200):**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "farmer_id": "FRM1023",
+  "full_name": "Ramesh Kumar",
+  "message": "Login successful"
+}
+```
+
+### Test Case 2: Invalid Aadhaar Format
+```json
+{
+  "aadhaar_number": "12345",
+  "password": "password123"
+}
+```
+
+**Expected Response (400):**
+```json
+{
+  "error": "Invalid Aadhaar number",
+  "message": "Aadhaar must be exactly 12 digits"
+}
+```
+
+### Test Case 3: Wrong Password
+```json
+{
+  "aadhaar_number": "123412341234",
+  "password": "wrongPassword"
+}
+```
+
+**Expected Response (401):**
+```json
+{
+  "error": "Invalid credentials",
+  "message": "Aadhaar number or password is incorrect"
+}
+```
+
+### Test Case 4: Non-existent Aadhaar
+```json
+{
+  "aadhaar_number": "111111111111",
+  "password": "password123"
+}
+```
+
+**Expected Response (401):**
+```json
+{
+  "error": "Invalid credentials",
+  "message": "Aadhaar number or password is incorrect"
+}
+```
+
+### Test Case 5: Missing Fields
+```json
+{
+  "aadhaar_number": "123412341234"
+}
+```
+
+**Expected Response (400):**
+```json
+{
+  "error": "Missing required fields",
+  "message": "aadhaar_number and password are required"
+}
+```
+
+---
+
+## CURL Commands for Login Testing
+
+### Successful Login:
+```bash
+curl -X POST http://localhost:5000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "aadhaar_number": "123412341234",
+    "password": "securePassword123"
+  }'
+```
+
+### Wrong Password:
+```bash
+curl -X POST http://localhost:5000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "aadhaar_number": "123412341234",
+    "password": "wrongPassword"
+  }'
+```
+
+### Test with Mock Data:
+First register a user, then login with same credentials:
+```bash
+# Step 1: Register
+curl -X POST http://localhost:5000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "aadhaar_number": "555555555555",
+    "full_name": "Login Test User",
+    "mobile_number": "5555555555",
+    "password": "testpass123",
+    "language_preference": "English"
+  }'
+
+# Step 2: Login with same credentials
+curl -X POST http://localhost:5000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "aadhaar_number": "555555555555",
+    "password": "testpass123"
+  }'
+```
+
+### Using the Token in Protected Routes:
+Once you receive the token, use it in subsequent requests:
+```bash
+curl -X GET http://localhost:5000/api/farmers \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+---
+
+## Login Implementation Details
+
+### Authentication Flow
+1. ✅ Receive Aadhaar + password
+2. ✅ Validate Aadhaar format (12 digits)
+3. ✅ Check required fields
+4. ✅ Query database for farmer
+5. ✅ Compare password with bcrypt
+6. ✅ Generate JWT token (7-day expiry)
+7. ✅ Return token + farmer details
+
+### Security Features
+- ✅ Password comparison using bcrypt
+- ✅ Generic error message (doesn't reveal if Aadhaar exists)
+- ✅ JWT token with expiration
+- ✅ Token includes farmer metadata
+- ✅ HTTPS recommended for production
+
+### Token Structure
+The JWT token contains:
+```json
+{
+  "farmer_id": "FRM1023",
+  "aadhaar_number": "123412341234",
+  "full_name": "Ramesh Kumar",
+  "iat": 1708329600,
+  "exp": 1708934400
+}
+```
+

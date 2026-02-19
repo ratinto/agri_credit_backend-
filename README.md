@@ -97,10 +97,36 @@ See `API_TESTS.md` for complete test cases.
 
 ---
 
-**2. Login Farmer** 🚧 Coming Soon
+**2. Login Farmer** ✅ COMPLETE
 ```
 POST /api/v1/auth/login
 ```
+
+**Request Body:**
+```json
+{
+  "aadhaar_number": "123412341234",
+  "password": "securePassword123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "farmer_id": "FRM1023",
+  "full_name": "Ramesh Kumar",
+  "message": "Login successful"
+}
+```
+
+**Features:**
+- ✅ Aadhaar + password authentication
+- ✅ Bcrypt password verification
+- ✅ JWT token generation (7-day expiry)
+- ✅ Secure credential validation
+
+---
 
 **3. Reset Password** 🚧 Coming Soon
 ```
@@ -206,5 +232,5 @@ For issues and questions, please create an issue on GitHub.
 
 ---
 
-**Implementation Progress:** 1/15 APIs Complete (6.7%)  
+**Implementation Progress:** 2/15 APIs Complete (13.3%)  
 **Last Updated:** February 19, 2026
